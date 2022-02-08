@@ -1,7 +1,75 @@
 #include <connection.h>
 
-void log_new_user(char *pubf){
-  printf("Logging in new user\n");
+int log_new_user(int fd){
+  //Get username
+  int userl;
+  char *user;
+  read(fd, &userl, sizeof(int));
+  user = calloc(userl + 1, 1);
+  read(fd, user, userl);
+
+  printf("Logging in new user: %s\n", user);
+
+  //Get public key for user
+  char *file = malloc(userl + 10);
+  strcpy(file, "keys/");
+  strcat(file, user);
+  strcat(file, ".pub");
+
+  RSA *pub = RSA_new();;
+  RSA_from_file_pub(pub, file);
+
+  //Send OTP
+  int OTP_len = 420;
+  unsigned char *OTP = malloc(OTP_len);
+  RAND_bytes(OTP, OTP_len);
+  send(fd, &OTP_len, sizeof(int), 0);
+  send(fd, OTP, OTP_len, 0);
+
+  //Receive signature
+  unsigned char *sig;
+  unsigned int sig_size;
+
+  read(fd, &sig_size, sizeof(int));
+  sig = malloc(sig_size);
+  read(fd, sig, sig_size);
+
+  //Check signature
+  if (RSA_verify(NID_sha256, OTP, OTP_len, sig, sig_size, pub) == 1){
+    printf("User verified\n");
+    return 0;
+  } else {
+    printf("User unverified\n");
+    return 1;
+  }
+}
+
+int log_into_server(int fd, char *user, RSA *rsa){
+  int userlen = strlen(user);
+
+  int OTP_len;
+  unsigned char *OTP;
+
+  unsigned char *sig = malloc(sizeof(char) * 4096);
+  unsigned int sig_size;
+
+  //Send username
+  send(fd, &userlen, sizeof(int), 0);
+  send(fd, user, sizeof(char) * userlen, 0);
+
+  //Get OTP
+
+  read(fd, &OTP_len, sizeof(int));
+  OTP = malloc(OTP_len);
+  read(fd, OTP, OTP_len);
+
+  //Sign OTP
+  RSA_sign(NID_sha256, OTP, OTP_len, sig, &sig_size, rsa);
+
+  send(fd, &sig_size, sizeof(int), 0);
+  send(fd, sig, sig_size, 0);
+
+  return 0;
 }
 
 int client_init(char *addr, int port){

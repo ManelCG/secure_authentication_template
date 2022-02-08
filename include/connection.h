@@ -9,7 +9,9 @@
 
 int server_init(struct sockaddr_in *, int port);
 int client_init(char *addr, int port);
-void log_new_user(char *pubf);
+
+int log_new_user(int socket_fd);
+int log_into_server(int fd, char *user, RSA *rsa);
 
 
 #endif

@@ -72,6 +72,37 @@ int RSA_to_file(RSA *rsa, char *pub, char *sec, char *pw){
   return 0;
 }
 
+int RSA_from_file_pub(RSA *rsa, char *pub){
+  FILE *fpp = NULL;
+
+  if (access(pub, F_OK) == -1) {
+    perror("Keypair not found");
+    return 1;
+  }
+  if (access(pub, R_OK) != 0){
+    perror("No permissions for reading");
+    return 2;
+  }
+
+  fpp = fopen(pub, "r");
+  RSA *pk = RSA_new();
+
+  if (!PEM_read_RSAPublicKey(fpp, &pk, NULL, NULL)){
+    perror("Error reading public key from file. Bad formating?");
+    return 3;
+  }
+  RSA_set0_key(rsa,
+               (BIGNUM *)RSA_get0_n(pk),
+               (BIGNUM *)RSA_get0_e(pk),
+               NULL);
+
+  fflush(fpp);
+  fclose(fpp);
+  free(pk);
+
+  return 0;
+}
+
 int RSA_from_file(RSA *rsa, char *pub, char *sec, char *pw){
   FILE *fpp = NULL;
   FILE *fps = NULL;

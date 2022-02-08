@@ -22,6 +22,8 @@ int RSA_from_file(RSA *, char *pub, char *sec, char *pw); //Returns error code
   //2: No permissions
   //3: Bad formating?
 
+int RSA_from_file_pub(RSA *, char *f);
+
 char *str2hash(char *);  //Returns string with hash of string
 
 RSA *RSA_from_name(char *name, char *pw);   //Returns keys stored in keys/ for user

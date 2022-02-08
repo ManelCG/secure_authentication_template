@@ -16,6 +16,9 @@ int main(int argc, char *argv[]){
   RSA *kp = RSA_from_name(user, "Patata");
 
   int socket_fd = client_init(address, port);
+  if (log_into_server(socket_fd, user, kp) == 0){
+    printf("Logged into server\n");
+  }
 
   // unsigned char *OTP = malloc(4096);
   // unsigned char *digest = malloc(SHA256_DIGEST_LENGTH);

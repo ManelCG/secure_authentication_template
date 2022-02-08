@@ -8,7 +8,7 @@ int main(int argc, char *argv[]){
   socklen_t addrlen = sizeof(address);
 
   int server_fd = server_init(&address, port);
-  int new_connection_fd, new_connection_pid;
+  int new_connection_fd; //, new_connection_pid;
 
   while (1){
     //Accepts new connection and creates sockets
@@ -20,9 +20,11 @@ int main(int argc, char *argv[]){
       perror("accept failed");
       exit(EXIT_FAILURE);
     } else {
-      int test;
-      read(new_connection_fd, &test, sizeof(int));
-      // log_new_user();
+      if (log_new_user(new_connection_fd) == 0){
+        printf("Logged new user\n");
+      } else {
+        printf("Error logging in new user\n");
+      }
     }
   }
 
