@@ -61,7 +61,7 @@ int log_into_server(int fd, char *user, RSA *rsa){
   int OTP_len;
   unsigned char *OTP;
 
-  unsigned char *sig = malloc(sizeof(char) * 4096);
+  unsigned char *sig = malloc(RSA_size(rsa));
   unsigned int sig_size;
 
   int verified;
@@ -81,6 +81,9 @@ int log_into_server(int fd, char *user, RSA *rsa){
 
   send(fd, &sig_size, sizeof(int), 0);
   send(fd, sig, sig_size, 0);
+
+  free(sig);
+  free(OTP);
 
   read (fd, &verified, sizeof(int));
   return verified;

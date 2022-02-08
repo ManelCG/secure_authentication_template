@@ -3,6 +3,7 @@
 
 int main(int argc, char *argv[]){
   int port = 42069;
+  int n_cons = 0;
 
   struct sockaddr_in address;
   socklen_t addrlen = sizeof(address);

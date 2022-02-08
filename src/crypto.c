@@ -12,11 +12,18 @@ RSA *RSA_from_name(char *name, char *pw){
     strcat(secf, ".sec");
 
     RSA *kp = RSA_new();
-    if (RSA_from_file(kp, pubf, secf, pw) == 1){
+    int retval = RSA_from_file(kp, pubf, secf, pw);
+    if (retval == 1){
       printf("Generating new keypair...\n");
       kp = RSA_gen_key_pair(4096);
       RSA_to_file(kp, pubf, secf, pw);
+    } else if (retval == 2 || retval == 3) {
+      perror("Error reading key...");
+      kp = NULL;
     }
+
+    free(pubf);
+    free(secf);
 
     return kp;
 }
