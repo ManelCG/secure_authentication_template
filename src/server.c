@@ -20,7 +20,7 @@ int main(int argc, char *argv[]){
       perror("accept failed");
       exit(EXIT_FAILURE);
     } else {
-      if (log_new_user(new_connection_fd) == 0){
+      if (log_new_user(new_connection_fd) == 1){
         printf("Logged new user\n");
       } else {
         printf("Error logging in new user\n");

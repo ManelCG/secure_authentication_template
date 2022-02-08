@@ -1,9 +1,20 @@
 #include <connection.h>
 
 int log_new_user(int fd){
-  //Get username
   int userl;
   char *user;
+
+  char *file; //Pub key file
+
+  int OTP_len = 420;
+  unsigned char *OTP;
+
+  unsigned char *sig;
+  unsigned int sig_size;
+
+  int verified;
+
+  //Get username
   read(fd, &userl, sizeof(int));
   user = calloc(userl + 1, 1);
   read(fd, user, userl);
@@ -11,7 +22,7 @@ int log_new_user(int fd){
   printf("Logging in new user: %s\n", user);
 
   //Get public key for user
-  char *file = malloc(userl + 10);
+  file = malloc(userl + 10);
   strcpy(file, "keys/");
   strcat(file, user);
   strcat(file, ".pub");
@@ -19,29 +30,29 @@ int log_new_user(int fd){
   RSA *pub = RSA_new();;
   RSA_from_file_pub(pub, file);
 
+  free(file); //Free file name mem
+
   //Send OTP
-  int OTP_len = 420;
-  unsigned char *OTP = malloc(OTP_len);
+  OTP = malloc(OTP_len);
   RAND_bytes(OTP, OTP_len);
   send(fd, &OTP_len, sizeof(int), 0);
   send(fd, OTP, OTP_len, 0);
 
   //Receive signature
-  unsigned char *sig;
-  unsigned int sig_size;
 
   read(fd, &sig_size, sizeof(int));
   sig = malloc(sig_size);
   read(fd, sig, sig_size);
 
   //Check signature
-  if (RSA_verify(NID_sha256, OTP, OTP_len, sig, sig_size, pub) == 1){
-    printf("User verified\n");
-    return 0;
-  } else {
-    printf("User unverified\n");
-    return 1;
-  }
+  verified = RSA_verify(NID_sha256, OTP, OTP_len, sig, sig_size, pub);
+
+  free(OTP);
+  free(sig);
+
+  //Send result and return it
+  send(fd, &verified, sizeof(int), 0);
+  return verified;
 }
 
 int log_into_server(int fd, char *user, RSA *rsa){
@@ -52,6 +63,8 @@ int log_into_server(int fd, char *user, RSA *rsa){
 
   unsigned char *sig = malloc(sizeof(char) * 4096);
   unsigned int sig_size;
+
+  int verified;
 
   //Send username
   send(fd, &userlen, sizeof(int), 0);
@@ -69,7 +82,8 @@ int log_into_server(int fd, char *user, RSA *rsa){
   send(fd, &sig_size, sizeof(int), 0);
   send(fd, sig, sig_size, 0);
 
-  return 0;
+  read (fd, &verified, sizeof(int));
+  return verified;
 }
 
 int client_init(char *addr, int port){
